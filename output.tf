@@ -41,3 +41,7 @@ output "kms_arn" {
 output "kms_alias" {
   value = aws_kms_alias.this.name
 }
+
+output "bastion_ssh_sg" {
+  value = aws_security_group.bastion_ssh.id
+}

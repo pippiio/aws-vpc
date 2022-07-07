@@ -45,6 +45,26 @@ resource "aws_security_group" "bastion" {
   })
 }
 
+resource "aws_security_group" "bastion_ssh" {
+  count = local.enable_bastion
+
+  description = "Enable SSH access from the bastion host."
+  name        = "${local.name_prefix}bastion-ssh"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "Allow ingress SSH from bastion host."
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
+  tags = merge(local.default_tags, {
+    Name = "${local.name_prefix}bastion-ssh"
+  })
+}
+
 data "aws_iam_policy_document" "bastion_assume_role" {
   count = local.enable_bastion
 
