@@ -57,7 +57,7 @@ resource "aws_security_group" "bastion_ssh" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    security_groups = [aws_security_group.bastion.id]
+    security_groups = [aws_security_group.bastion[0].id]
   }
 
   tags = merge(local.default_tags, {

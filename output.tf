@@ -43,5 +43,5 @@ output "kms_alias" {
 }
 
 output "bastion_ssh_sg" {
-  value = aws_security_group.bastion_ssh.id
+  value = local.enable_bastion == 1 ? aws_security_group.bastion_ssh[0].id : null
 }
