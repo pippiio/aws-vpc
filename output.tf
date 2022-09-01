@@ -26,6 +26,10 @@ output "private_subnet" {
   value = [for k, v in local.subnet : aws_subnet.this[k].id if v.type == "private"]
 }
 
+output "route_tables" {
+  value = aws_route_table.this
+}
+
 output "bastion_public_ip" {
   value = local.enable_bastion > 0 ? aws_eip_association.bastion[0].public_ip : null
 }
