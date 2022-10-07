@@ -4,11 +4,11 @@ variable "config" {
     vpc_cidr = string
 
     availability_zone_count = optional(number)
-    public_subnet_bits      = optional(number)
-    private_subnet_bits     = optional(number)
+    public_subnet_bits      = optional(number, 28)
+    private_subnet_bits     = optional(number, 27)
 
-    nat_mode                   = optional(string)
-    flowlogs_retention_in_days = optional(number)
+    nat_mode                   = optional(string, "single_nat_instance")
+    flowlogs_retention_in_days = optional(number, -1)
 
     bastion_security_groups = optional(set(string))
     trusted_ip_cidrs        = optional(set(string))
