@@ -1,10 +1,5 @@
 locals {
-  config = defaults(var.config, {
-    public_subnet_bits         = 28
-    private_subnet_bits        = 27
-    flowlogs_retention_in_days = -1
-    nat_mode                   = "single_nat_instance"
-  })
+  config = var.config
 
   availability_zone_count = length(data.aws_availability_zones.available.names)
   vpc_cidr_bits           = tonumber(regex("/(\\d+)$", local.config.vpc_cidr)[0])
@@ -28,5 +23,6 @@ locals {
     }]
   ) : "${net.type}-${net.no}" => net }
 
-  enable_bastion = local.config.trusted_ssh_public_keys != null ? 1 : 0
+  enable_nat_instance = local.config.nat_mode == "single_nat_instance" ? 1 : 0
+  enable_bastion      = local.config.trusted_ssh_public_keys != null ? 1 : 0
 }
