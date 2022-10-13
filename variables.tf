@@ -10,9 +10,9 @@ variable "config" {
     nat_mode                   = optional(string, "single_nat_instance")
     flowlogs_retention_in_days = optional(number, -1)
 
-    bastion_security_groups = optional(set(string))
-    trusted_ip_cidrs        = optional(set(string))
-    trusted_ssh_public_keys = optional(set(string))
+    bastion_security_groups = optional(set(string), [])
+    trusted_ip_cidrs        = optional(set(string), [])
+    trusted_ssh_public_keys = optional(set(string), [])
   })
 
   validation {
