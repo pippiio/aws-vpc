@@ -26,7 +26,7 @@ variable "config" {
   }
 
   validation {
-    condition     = try(contains(["ha_nat_gw", "single_nat_instance"], var.config.nat_mode), true)
+    condition     = try(contains(["none", "ha_nat_gw", "single_nat_instance"], var.config.nat_mode), true)
     error_message = "`config.nat_mode` is invalid. Valid values are [ha_nat_gw single_nat_instance]."
   }
 }
