@@ -28,7 +28,7 @@ resource "aws_security_group" "bastion" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = setunion(local.config.trusted_ip_cidrs, data.aws_ip_ranges.this.cidr_blocks)
+    cidr_blocks = setunion(var.config.trusted_ip_cidrs, data.aws_ip_ranges.this.cidr_blocks)
   }
 
   egress {
@@ -53,10 +53,10 @@ resource "aws_security_group" "bastion_ssh" {
   vpc_id      = aws_vpc.this.id
 
   ingress {
-    description = "Allow ingress SSH from bastion host."
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
+    description     = "Allow ingress SSH from bastion host."
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
     security_groups = [aws_security_group.bastion[0].id]
   }
 
@@ -132,16 +132,15 @@ resource "aws_instance" "bastion" {
   iam_instance_profile    = aws_iam_instance_profile.bastion[0].id
   disable_api_termination = true
   monitoring              = true
-  user_data               = templatefile("${path.module}/userdata.sh", { ssh_keys = local.config.trusted_ssh_public_keys })
+  user_data               = templatefile("${path.module}/userdata.sh", { ssh_keys = var.config.trusted_ssh_public_keys })
 
   vpc_security_group_ids = setunion([aws_security_group.bastion[0].id],
-    local.config.bastion_security_groups
+    var.config.bastion_security_groups
   )
 
   tags = merge(local.default_tags, {
     Name                 = "${local.name_prefix}bastion"
     ec2-instance-connect = "bastion"
-    a                    = "b"
   })
 
   root_block_device {
