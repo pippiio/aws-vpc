@@ -7,6 +7,7 @@ locals {
         type        = "gateway_id"
       }
     },
+    { private = null },
     {
       for k, v in aws_nat_gateway.this : "nat_gw-${local.subnet[k].no}" => {
         gateway     = v.id
@@ -34,7 +35,7 @@ resource "aws_route_table" "this" {
 }
 
 resource "aws_route" "this" {
-  for_each = local.route
+  for_each = { for k, v in local.route : k => v if v != null }
 
   route_table_id       = aws_route_table.this[each.key].id
   gateway_id           = each.value.type == "gateway_id" ? each.value.gateway : null
@@ -49,6 +50,13 @@ resource "aws_route_table_association" "public" {
 
   subnet_id      = aws_subnet.this[each.key].id
   route_table_id = aws_route_table.this["public"].id
+}
+
+resource "aws_route_table_association" "isolated" {
+  for_each = { for k, v in local.subnet : k => v if v.type == "private" && var.config.nat_mode == "none" }
+
+  subnet_id      = aws_subnet.this[each.key].id
+  route_table_id = aws_route_table.this["private"].id
 }
 
 resource "aws_route_table_association" "nat_gw" {
