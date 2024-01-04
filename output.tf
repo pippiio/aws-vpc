@@ -15,7 +15,7 @@ output "vpc_cidr" {
 
 output "vpc_flow_logs_loggroup" {
   description = "The VPC FlowLogs log group in CloudWatch."
-  value       = var.config.flowlogs_retention_in_days < 1 ? null : aws_cloudwatch_log_group.this[0].arn
+  value       = var.network.flowlogs_retention_in_days < 1 ? null : aws_cloudwatch_log_group.this[0].arn
 }
 
 output "public_subnet" {
