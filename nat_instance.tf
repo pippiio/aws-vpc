@@ -15,7 +15,7 @@ data "aws_ami" "nat_instance" {
 }
 
 resource "aws_eip" "nat_instance" {
-  count = var.config.nat_mode == "single_nat_instance" ? 1 : 0
+  count = var.nat.mode == "single_nat_instance" ? 1 : 0
 
   vpc = true
   tags = merge(local.default_tags, {
@@ -29,7 +29,7 @@ resource "aws_eip" "nat_instance" {
 }
 
 resource "aws_security_group" "nat_instance" {
-  count = var.config.nat_mode == "single_nat_instance" ? 1 : 0
+  count = var.nat.mode == "single_nat_instance" ? 1 : 0
 
   name        = "${local.name_prefix}nat-instance"
   description = "Security Group for NAT Instance"
@@ -58,7 +58,7 @@ resource "aws_security_group" "nat_instance" {
 }
 
 resource "aws_instance" "nat_instance" {
-  count = var.config.nat_mode == "single_nat_instance" ? 1 : 0
+  count = var.nat.mode == "single_nat_instance" ? 1 : 0
 
   ami                     = data.aws_ami.nat_instance.id
   instance_type           = "t3.nano"
@@ -88,7 +88,7 @@ resource "aws_instance" "nat_instance" {
 }
 
 resource "aws_eip_association" "nat_instance" {
-  count = var.config.nat_mode == "single_nat_instance" ? 1 : 0
+  count = var.nat.mode == "single_nat_instance" ? 1 : 0
 
   instance_id   = aws_instance.nat_instance[0].id
   allocation_id = aws_eip.nat_instance[0].id

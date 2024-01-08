@@ -53,7 +53,7 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_route_table_association" "isolated" {
-  for_each = { for k, v in local.subnet : k => v if v.type == "private" && var.config.nat_mode == "none" }
+  for_each = { for k, v in local.subnet : k => v if v.type == "private" && var.nat.mode == "none" }
 
   subnet_id      = aws_subnet.this[each.key].id
   route_table_id = aws_route_table.this["private"].id

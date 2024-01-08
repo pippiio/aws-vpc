@@ -1,5 +1,5 @@
 resource "aws_eip" "nat_gw" {
-  for_each = { for k, v in local.subnet : k => v if v.type == "public" && var.config.nat_mode == "ha_nat_gw" }
+  for_each = { for k, v in local.subnet : k => v if v.type == "public" && var.nat.mode == "ha_nat_gw" }
 
   vpc = true
 
@@ -11,7 +11,7 @@ resource "aws_eip" "nat_gw" {
 
 resource "aws_nat_gateway" "this" {
   for_each = { for k, v in local.subnet : k => v
-    if v.type == "public" && var.config.nat_mode == "ha_nat_gw"
+    if v.type == "public" && var.nat.mode == "ha_nat_gw"
   }
 
   allocation_id = aws_eip.nat_gw[each.key].id

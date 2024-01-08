@@ -1,13 +1,13 @@
 resource "aws_cloudwatch_log_group" "this" {
-  count = var.config.flowlogs_retention_in_days < 1 ? 0 : 1
+  count = var.network.flowlogs_retention_in_days < 1 ? 0 : 1
 
   name              = "${local.name_prefix}flow-log"
-  retention_in_days = var.config.flowlogs_retention_in_days
+  retention_in_days = var.network.flowlogs_retention_in_days
   tags              = local.default_tags
 }
 
 resource "aws_iam_role" "this" {
-  count = var.config.flowlogs_retention_in_days < 1 ? 0 : 1
+  count = var.network.flowlogs_retention_in_days < 1 ? 0 : 1
 
   name = "${local.name_prefix}flow_log_role"
   path = "/"
@@ -43,7 +43,7 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_flow_log" "this" {
-  count = var.config.flowlogs_retention_in_days < 1 ? 0 : 1
+  count = var.network.flowlogs_retention_in_days < 1 ? 0 : 1
 
   iam_role_arn    = aws_iam_role.this[0].arn
   log_destination = aws_cloudwatch_log_group.this[0].arn

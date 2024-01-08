@@ -28,7 +28,7 @@ resource "aws_security_group" "bastion" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = setunion(var.config.trusted_ip_cidrs, data.aws_ip_ranges.this.cidr_blocks)
+    cidr_blocks = setunion(var.bastion.trusted_ip_cidrs, data.aws_ip_ranges.this.cidr_blocks)
   }
 
   egress {
@@ -132,10 +132,10 @@ resource "aws_instance" "bastion" {
   iam_instance_profile    = aws_iam_instance_profile.bastion[0].id
   disable_api_termination = true
   monitoring              = true
-  user_data               = templatefile("${path.module}/userdata.sh", { ssh_keys = var.config.trusted_ssh_public_keys })
+  user_data               = templatefile("${path.module}/userdata.sh", { ssh_keys = var.bastion.trusted_ssh_public_keys })
 
   vpc_security_group_ids = setunion([aws_security_group.bastion[0].id],
-    var.config.bastion_security_groups
+    var.bastion.bastion_security_groups
   )
 
   tags = merge(local.default_tags, {
