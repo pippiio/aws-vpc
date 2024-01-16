@@ -15,7 +15,7 @@ data "aws_ami" "nat_instance" {
 }
 
 resource "aws_eip" "nat_instance" {
-  count = var.nat.mode == "single_nat_instance" ? 1 : 0
+  count = local.enable_nat_instance
 
   vpc = true
   tags = merge(local.default_tags, {
@@ -29,7 +29,7 @@ resource "aws_eip" "nat_instance" {
 }
 
 resource "aws_security_group" "nat_instance" {
-  count = var.nat.mode == "single_nat_instance" ? 1 : 0
+  count = local.enable_nat_instance
 
   name        = "${local.name_prefix}nat-instance"
   description = "Security Group for NAT Instance"
@@ -58,7 +58,7 @@ resource "aws_security_group" "nat_instance" {
 }
 
 resource "aws_instance" "nat_instance" {
-  count = var.nat.mode == "single_nat_instance" ? 1 : 0
+  count = local.enable_nat_instance
 
   ami                     = data.aws_ami.nat_instance.id
   instance_type           = "t3.nano"
@@ -68,7 +68,6 @@ resource "aws_instance" "nat_instance" {
   monitoring              = true
   disable_api_termination = true
 
-
   tags = merge(local.default_tags, {
     Name = "${local.name_prefix}nat-instance"
   })
@@ -77,10 +76,10 @@ resource "aws_instance" "nat_instance" {
     encrypted = true
   }
 
-  # metadata_options {
-  #   http_endpoint = "enabled"
-  #   http_tokens   = "required"
-  # }
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
 
   lifecycle {
     create_before_destroy = true
@@ -88,7 +87,7 @@ resource "aws_instance" "nat_instance" {
 }
 
 resource "aws_eip_association" "nat_instance" {
-  count = var.nat.mode == "single_nat_instance" ? 1 : 0
+  count = local.enable_nat_instance
 
   instance_id   = aws_instance.nat_instance[0].id
   allocation_id = aws_eip.nat_instance[0].id

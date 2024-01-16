@@ -24,3 +24,37 @@ locals {
   enable_nat_instance = var.nat.mode == "single_nat_instance" ? 1 : 0
   enable_bastion      = length(var.bastion.trusted_ssh_public_keys) > 0 ? 1 : 0
 }
+
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+
+data "aws_iam_policy_document" "ec2" {
+  statement {
+    sid = "LogStreamPublishingPermission"
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams",
+    ]
+
+    resources = [try("${aws_cloudwatch_log_group.ec2[0].arn}:*", "")]
+  }
+}
+
+resource "aws_cloudwatch_log_group" "ec2" {
+  count = local.enable_bastion + local.enable_nat_instance > 0 ? 1 : 0
+
+  name              = "/aws/ec2/asg/${local.name_prefix}vpc"
+  retention_in_days = 7
+  # kms_key_id        =  local.kms_key
+
+  tags = local.default_tags
+}

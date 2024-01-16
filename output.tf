@@ -15,7 +15,7 @@ output "vpc_cidr" {
 
 output "vpc_flow_logs_loggroup" {
   description = "The VPC FlowLogs log group in CloudWatch."
-  value       = var.network.flowlogs_retention_in_days < 1 ? null : aws_cloudwatch_log_group.this[0].arn
+  value       = try( aws_cloudwatch_log_group.this[0].arn, null)
 }
 
 output "public_subnet" {
@@ -31,11 +31,11 @@ output "route_tables" {
 }
 
 output "bastion_public_ip" {
-  value = local.enable_bastion > 0 ? aws_eip_association.bastion[0].public_ip : null
+  value = try(aws_eip.bastion[0].public_ip, null)
 }
 
 output "bastion_sg" {
-  value = local.enable_bastion > 0 ? aws_security_group.bastion[0].id : null
+  value = try( aws_security_group.bastion[0].id , null)
 }
 
 output "kms_arn" {
@@ -47,5 +47,5 @@ output "kms_alias" {
 }
 
 output "bastion_ssh_sg" {
-  value = local.enable_bastion == 1 ? aws_security_group.bastion_ssh[0].id : null
+  value = try( aws_security_group.bastion_ssh[0].id , null)
 }

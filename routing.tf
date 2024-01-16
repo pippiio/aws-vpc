@@ -67,7 +67,7 @@ resource "aws_route_table_association" "nat_gw" {
 }
 
 resource "aws_route_table_association" "nat_instance" {
-  for_each = { for k, v in local.subnet : k => v if v.type == "private" && length(aws_instance.nat_instance) > 0 }
+  for_each = { for k, v in local.subnet : k => v if v.type == "private" && local.enable_nat_instance == 1 }
 
   subnet_id      = aws_subnet.this[each.key].id
   route_table_id = aws_route_table.this["nat-instance"].id
