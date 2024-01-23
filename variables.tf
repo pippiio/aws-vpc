@@ -7,12 +7,6 @@ variable "network" {
     public_subnet_bits         = optional(number, 28)
     private_subnet_bits        = optional(number, 27)
     flowlogs_retention_in_days = optional(number, -1)
-
-    # nat_mode                   = optional(string, "single_nat_instance")
-
-    # bastion_security_groups = optional(set(string), [])
-    # trusted_ip_cidrs        = optional(set(string), [])
-    # trusted_ssh_public_keys = optional(set(string), [])
   })
 
   validation {
@@ -24,7 +18,6 @@ variable "network" {
     condition     = can(cidrnetmask(var.network.vpc_cidr))
     error_message = "`network.vpc_cidr` is invalid. Must be valid CIDR range between /16 and /28."
   }
-
 }
 
 variable "nat" {
@@ -41,7 +34,8 @@ variable "nat" {
 
 variable "bastion" {
   type = object({
-    bastion_security_groups = optional(set(string), [])
+    type                    = optional(string, "t4g.nano")
+    security_groups         = optional(set(string), [])
     trusted_ip_cidrs        = optional(set(string), [])
     trusted_ssh_public_keys = optional(set(string), [])
   })

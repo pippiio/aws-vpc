@@ -16,8 +16,8 @@ locals {
       }
     },
     {
-      for k, v in aws_instance.nat_instance : "nat-instance" => {
-        gateway     = v.primary_network_interface_id
+      for k, v in aws_network_interface.nat_instance : "nat-instance" => {
+        gateway     = v.id
         destination = "0.0.0.0/0"
         type        = "network_interface_id"
       }
@@ -67,7 +67,7 @@ resource "aws_route_table_association" "nat_gw" {
 }
 
 resource "aws_route_table_association" "nat_instance" {
-  for_each = { for k, v in local.subnet : k => v if v.type == "private" && length(aws_instance.nat_instance) > 0 }
+  for_each = { for k, v in local.subnet : k => v if v.type == "private" && length(aws_network_interface.nat_instance) > 0 }
 
   subnet_id      = aws_subnet.this[each.key].id
   route_table_id = aws_route_table.this["nat-instance"].id

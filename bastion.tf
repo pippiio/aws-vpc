@@ -1,21 +1,3 @@
-data "aws_ami" "bastion" {
-  count = local.enable_bastion
-
-  most_recent = true
-  owners      = ["amazon"]
-  name_regex  = "^amzn2-ami-hvm.*-ebs"
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-}
-
-data "aws_ip_ranges" "this" {
-  regions  = [local.region_name]
-  services = ["ec2_instance_connect"]
-}
-
 resource "aws_security_group" "bastion" {
   count = local.enable_bastion
 
@@ -65,41 +47,15 @@ resource "aws_security_group" "bastion_ssh" {
   })
 }
 
-data "aws_iam_policy_document" "bastion_assume_role" {
-  count = local.enable_bastion
-
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
-
 data "aws_iam_policy_document" "bastion_inline_policy" {
   count = local.enable_bastion
 
   statement {
-    actions   = ["ec2-instance-connect:SendSSHPublicKey"]
-    resources = ["arn:aws:ec2:${local.region_name}:${local.account_id}:instance/*"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "ec2:osuser"
-      values   = ["ec2-user"]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:ResourceTag/ec2-instance-connect"
-      values   = ["bastion"]
-    }
-  }
-
-  statement {
-    actions   = ["ec2:DescribeInstances"]
-    resources = ["arn:aws:ec2:${local.region_name}:${local.account_id}:instance/*"]
+    actions = ["ec2:AssociateAddress"]
+    resources = [
+      "arn:aws:ec2:${local.region_name}:${local.account_id}:instance/*",
+      "arn:aws:ec2:${local.region_name}:${local.account_id}:elastic-ip/${aws_eip.bastion[0].allocation_id}",
+    ]
   }
 }
 
@@ -108,7 +64,7 @@ resource "aws_iam_role" "bastion" {
 
   name               = "${local.name_prefix}bastion-role"
   path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.bastion_assume_role[0].json
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 
   inline_policy {
     name   = "bastion_inline_policy"
@@ -121,40 +77,6 @@ resource "aws_iam_instance_profile" "bastion" {
 
   name = "${local.name_prefix}bastion-profile"
   role = aws_iam_role.bastion[0].name
-}
-
-resource "aws_instance" "bastion" {
-  count = local.enable_bastion
-
-  ami                     = data.aws_ami.bastion[0].id
-  instance_type           = "t3.nano"
-  subnet_id               = aws_subnet.this["public-0"].id
-  iam_instance_profile    = aws_iam_instance_profile.bastion[0].id
-  disable_api_termination = true
-  monitoring              = true
-  user_data               = templatefile("${path.module}/userdata.sh", { ssh_keys = var.bastion.trusted_ssh_public_keys })
-
-  vpc_security_group_ids = setunion([aws_security_group.bastion[0].id],
-    var.bastion.bastion_security_groups
-  )
-
-  tags = merge(local.default_tags, {
-    Name                 = "${local.name_prefix}bastion"
-    ec2-instance-connect = "bastion"
-  })
-
-  root_block_device {
-    encrypted = true
-  }
-
-  # metadata_options {
-  #   http_endpoint = "enabled"
-  #   http_tokens   = "required"
-  # }
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_eip" "bastion" {
@@ -171,9 +93,71 @@ resource "aws_eip" "bastion" {
   }
 }
 
-resource "aws_eip_association" "bastion" {
+resource "aws_launch_configuration" "bastion" {
   count = local.enable_bastion
 
-  instance_id   = aws_instance.bastion[0].id
-  allocation_id = aws_eip.bastion[0].id
+  name_prefix                 = "${local.name_prefix}bastion"
+  image_id                    = data.aws_ami.this.id
+  instance_type               = local.bastion_instance_type
+  iam_instance_profile        = aws_iam_instance_profile.bastion[0].id
+  associate_public_ip_address = true
+  enable_monitoring           = true
+  security_groups = setunion([
+    aws_security_group.bastion[0].id],
+    var.bastion.security_groups,
+  )
+
+  user_data = templatefile("${path.module}/userdata/bastion.sh", {
+    ssh_keys   = var.bastion.trusted_ssh_public_keys
+    aws_region = local.region_name
+    eip        = aws_eip.bastion[0].allocation_id
+  })
+
+  root_block_device {
+    encrypted = true
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "bastion" {
+  count = local.enable_bastion
+
+  desired_capacity          = 1
+  max_size                  = 1
+  min_size                  = 1
+  vpc_zone_identifier       = [aws_subnet.this["public-0"].id]
+  launch_configuration      = aws_launch_configuration.bastion[0].id
+  health_check_type         = "EC2"
+  health_check_grace_period = 300
+  force_delete              = true
+  wait_for_capacity_timeout = "0"
+  max_instance_lifetime     = 60 * 60 * 24 * 4
+
+  tag {
+    key                 = "Name"
+    value               = "${local.name_prefix}bastion-instance"
+    propagate_at_launch = true
+  }
+
+  dynamic "tag" {
+    for_each = local.default_tags
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
