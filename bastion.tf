@@ -1,19 +1,3 @@
-data "aws_ami" "bastion" {
-  most_recent = true
-  owners      = ["amazon"]
-  name_regex  = "al2023-ami-2023*"
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-}
-
-data "aws_ip_ranges" "this" {
-  regions  = [local.region_name]
-  services = ["ec2_instance_connect"]
-}
-
 resource "aws_security_group" "bastion" {
   count = local.enable_bastion
 
@@ -83,11 +67,6 @@ resource "aws_iam_role" "bastion" {
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 
   inline_policy {
-    name   = "ec2_basic_vpc_policy"
-    policy = data.aws_iam_policy_document.ec2.json
-  }
-
-  inline_policy {
     name   = "bastion_inline_policy"
     policy = data.aws_iam_policy_document.bastion_inline_policy[0].json
   }
@@ -118,14 +97,14 @@ resource "aws_launch_configuration" "bastion" {
   count = local.enable_bastion
 
   name_prefix                 = "${local.name_prefix}bastion"
-  image_id                    = data.aws_ami.bastion.id
-  instance_type               = "t3.nano"
+  image_id                    = data.aws_ami.this.id
+  instance_type               = local.bastion_instance_type
   iam_instance_profile        = aws_iam_instance_profile.bastion[0].id
   associate_public_ip_address = true
   enable_monitoring           = true
   security_groups = setunion([
     aws_security_group.bastion[0].id],
-    var.bastion.bastion_security_groups,
+    var.bastion.security_groups,
   )
 
   user_data = templatefile("${path.module}/userdata/bastion.sh", {
