@@ -13,12 +13,14 @@ locals {
       type              = "public"
       no                = idx
       availability_zone = data.aws_availability_zones.available.names[idx]
+      tags              = var.network.public_subnet_tags
       cidr              = cidrsubnet(local.cidrs[0], var.network.public_subnet_bits - local.vpc_cidr_bits - local.pub_sub_cidr_bits, idx)
     }],
     [for idx in range(local.availability_zone_count) : {
       type              = "private"
       no                = idx
       availability_zone = data.aws_availability_zones.available.names[idx]
+      tags              = var.network.private_subnet_tags
       cidr              = cidrsubnet(local.cidrs[1], var.network.private_subnet_bits - local.vpc_cidr_bits - local.prv_sub_cidr_bits, idx)
     }]
   ) : "${net.type}-${net.no}" => net }
