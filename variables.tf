@@ -8,8 +8,8 @@ variable "network" {
     private_subnet_bits        = optional(number, 27)
     flowlogs_retention_in_days = optional(number, -1)
 
-    public_subnet_tags  = optional(list(string))
-    private_subnet_tags = optional(list(string))
+    public_subnet_tags  = optional(map(string))
+    private_subnet_tags = optional(map(string))
   })
 
   validation {
