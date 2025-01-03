@@ -24,7 +24,7 @@ locals {
   ) : "${net.type}-${net.no}" => net }
 
   enable_nat_instance = var.nat.mode == "single_nat_instance" ? 1 : 0
-  enable_bastion      = length(var.bastion.trusted_ssh_public_keys) > 0 ? 1 : 0
+  enable_bastion      = var.bastion.enabled ? 1 : 0
 }
 
 data "aws_ami" "this" {
@@ -36,11 +36,6 @@ data "aws_ami" "this" {
     name   = "architecture"
     values = ["arm64"]
   }
-}
-
-data "aws_ip_ranges" "this" {
-  regions  = [local.region_name]
-  services = ["ec2_instance_connect"]
 }
 
 data "aws_iam_policy_document" "ec2_assume_role" {
