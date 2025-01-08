@@ -5,9 +5,23 @@ resource "aws_security_group" "bastion" {
   name        = "${local.name_prefix}bastion"
   vpc_id      = aws_vpc.this.id
 
+  egress {
+    description      = "Allow all egress traffic"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
   tags = merge(local.default_tags, {
     Name = "${local.name_prefix}bastion"
   })
+}
+
+resource "aws_iam_role_policy_attachment" "bastion" {
+  role       = aws_iam_role.bastion[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_role" "bastion" {
