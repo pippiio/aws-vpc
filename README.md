@@ -21,8 +21,8 @@ module "vpc" {
 ## Requirements
 |Name     |Version |
 |---------|--------|
-|terraform|>= 1.2.0|
-|aws      |~> 4.0  |
+|terraform|>= 1.7  |
+|aws      |~> 5    |
 
 
 ## Variables
@@ -36,8 +36,6 @@ module "vpc" {
 |nat_mode                  |string     |single_nat_instance|no      |Natgateway mode `single_nat_instance` or `ha_nat_gw`|
 |flowlogs_retention_in_days|number     |-1                 |no      |Retention in days for flowlogs|
 |bastion_security_groups   |set(string)|nil                |no      |Security group ID's for bastion|
-|trusted_ip_cidrs          |set(string)|nil                |no      |IP Ciders to trust on bastion host|
-|trusted_ssh_public_keys   |set(string)|nil                |no      |SSH keys to trust on bastion host|
 
 ### name_prefix:
 |Type        |Default|Required|Description|
