@@ -30,10 +30,6 @@ output "route_tables" {
   value = aws_route_table.this
 }
 
-output "bastion_public_ip" {
-  value = try(aws_eip.bastion[0].public_ip, null)
-}
-
 output "bastion_sg" {
   value = try(aws_security_group.bastion[0].id, null)
 }
@@ -44,8 +40,4 @@ output "kms_arn" {
 
 output "kms_alias" {
   value = aws_kms_alias.this.name
-}
-
-output "bastion_ssh_sg" {
-  value = try(aws_security_group.bastion_ssh[0].id, null)
 }

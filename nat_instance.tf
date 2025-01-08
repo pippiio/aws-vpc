@@ -6,14 +6,6 @@ resource "aws_security_group" "nat_instance" {
   vpc_id      = aws_vpc.this.id
 
   ingress {
-    description = "Allow ingress SSH from ec2 instance connect."
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = data.aws_ip_ranges.this.cidr_blocks
-  }
-
-  ingress {
     description = "Allow ingress traffic from the private subnet CIDR block"
     from_port   = 0
     to_port     = 0

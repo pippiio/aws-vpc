@@ -34,10 +34,9 @@ variable "nat" {
 
 variable "bastion" {
   type = object({
-    type                    = optional(string, "t4g.nano")
-    security_groups         = optional(set(string), [])
-    trusted_ip_cidrs        = optional(set(string), [])
-    trusted_ssh_public_keys = optional(set(string), [])
+    enabled         = optional(bool, true)
+    type            = optional(string, "t4g.nano")
+    security_groups = optional(set(string), [])
   })
   default = {}
 }
