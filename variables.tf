@@ -23,6 +23,7 @@ variable "network" {
 variable "nat" {
   type = object({
     mode = optional(string, "single_nat_instance")
+    type = optional(string, "t4g.nano")
   })
   default = {}
 

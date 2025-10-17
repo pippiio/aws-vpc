@@ -1,6 +1,6 @@
 locals {
-  nat_instance_type       = "t4g.nano"
-  bastion_instance_type   = "t4g.nano"
+  nat_instance_type       = var.nat.type
+  bastion_instance_type   = var.bastion.type
   availability_zone_count = length(data.aws_availability_zones.available.names)
   vpc_cidr_bits           = tonumber(regex("/(\\d+)$", var.network.vpc_cidr)[0])
   pub_sub_cidr_bits       = var.network.public_subnet_bits - local.vpc_cidr_bits - [0, 1, 2, 2][local.availability_zone_count - 1]
