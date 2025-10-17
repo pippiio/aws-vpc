@@ -152,6 +152,8 @@ resource "aws_autoscaling_group" "nat_instance" {
   max_size                  = 1
   min_size                  = 1
   vpc_zone_identifier       = [aws_subnet.this["public-0"].id]
+  availability_zones        = data.aws_availability_zones.available.names
+  
   launch_template {
     id      = aws_launch_template.nat_instance[0].id
     version = "$Latest"
