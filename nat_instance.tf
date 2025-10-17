@@ -88,7 +88,7 @@ resource "aws_network_interface" "nat_instance" {
 resource "aws_eip" "nat_instance" {
   count = local.enable_nat_instance
 
-  vpc = true
+  domain = "vpc"
   tags = merge(local.default_tags, {
     Name = "${local.name_prefix}nat-instance"
     Type = "public"
@@ -99,25 +99,39 @@ resource "aws_eip" "nat_instance" {
   }
 }
 
-resource "aws_launch_configuration" "nat_instance" {
+resource "aws_launch_template" "nat_instance" {
   count = local.enable_nat_instance
 
-  name_prefix                 = "${local.name_prefix}nat-instance"
-  image_id                    = data.aws_ami.this.id
-  instance_type               = local.nat_instance_type
-  iam_instance_profile        = aws_iam_instance_profile.nat_instance[0].id
-  associate_public_ip_address = true
-  enable_monitoring           = true
-  security_groups             = [aws_security_group.nat_instance[0].id]
+  name_prefix   = "${local.name_prefix}nat-instance"
+  image_id      = data.aws_ami.this.id
+  instance_type = local.nat_instance_type
 
-  user_data = templatefile("${path.module}/userdata/nat-instance.sh", {
+  iam_instance_profile {
+    name = aws_iam_instance_profile.nat_instance[0].name
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.nat_instance[0].id]
+    device_index                = 0
+  }
+
+  monitoring {
+    enabled = true
+  }
+
+  user_data = base64encode(templatefile("${path.module}/userdata/nat-instance.sh", {
     aws_region = local.region_name
     eip        = aws_eip.nat_instance[0].allocation_id
     eni        = aws_network_interface.nat_instance[0].id
-  })
+  }))
 
-  root_block_device {
-    encrypted = true
+  block_device_mappings {
+    device_name = data.aws_ami.this.root_device_name
+
+    ebs {
+      encrypted = true
+    }
   }
 
   metadata_options {
@@ -138,7 +152,10 @@ resource "aws_autoscaling_group" "nat_instance" {
   max_size                  = 1
   min_size                  = 1
   vpc_zone_identifier       = [aws_subnet.this["public-0"].id]
-  launch_configuration      = aws_launch_configuration.nat_instance[0].id
+  launch_template {
+    id      = aws_launch_template.nat_instance[0].id
+    version = "$Latest"
+  }
   health_check_type         = "EC2"
   health_check_grace_period = 300
   force_delete              = true
