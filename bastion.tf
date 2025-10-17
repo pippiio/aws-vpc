@@ -39,23 +39,37 @@ resource "aws_iam_instance_profile" "bastion" {
   role = aws_iam_role.bastion[0].name
 }
 
-resource "aws_launch_configuration" "bastion" {
+resource "aws_launch_template" "bastion" {
   count = local.enable_bastion
 
   name_prefix                 = "${local.name_prefix}bastion"
   image_id                    = data.aws_ami.this.id
   instance_type               = local.bastion_instance_type
-  iam_instance_profile        = aws_iam_instance_profile.bastion[0].id
-  associate_public_ip_address = true
-  enable_monitoring           = true
-  user_data                   = file("${path.module}/userdata/bastion.sh")
-  security_groups = setunion([
-    aws_security_group.bastion[0].id],
-    var.bastion.security_groups,
-  )
 
-  root_block_device {
-    encrypted = true
+  iam_instance_profile {
+    name = aws_iam_instance_profile.bastion[0].name
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups = setunion([
+      aws_security_group.bastion[0].id
+    ], var.bastion.security_groups)
+    device_index = 0
+  }
+
+  monitoring {
+    enabled = true
+  }
+
+  user_data = base64encode(file("${path.module}/userdata/bastion.sh"))
+
+  block_device_mappings {
+    device_name = data.aws_ami.this.root_device_name
+
+    ebs {
+      encrypted = true
+    }
   }
 
   metadata_options {
@@ -75,7 +89,10 @@ resource "aws_autoscaling_group" "bastion" {
   max_size                  = 1
   min_size                  = 0
   vpc_zone_identifier       = [aws_subnet.this["public-0"].id]
-  launch_configuration      = aws_launch_configuration.bastion[0].id
+  launch_template {
+    id      = aws_launch_template.bastion[0].id
+    version = "$Latest"
+  }
   health_check_type         = "EC2"
   health_check_grace_period = 300
   force_delete              = true
