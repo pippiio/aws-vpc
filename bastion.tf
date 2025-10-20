@@ -88,9 +88,8 @@ resource "aws_autoscaling_group" "bastion" {
   desired_capacity          = 1
   max_size                  = 1
   min_size                  = 0
-  vpc_zone_identifier       = [aws_subnet.this["public-0"].id]
-  availability_zones        = data.aws_availability_zones.available.names
-  
+  vpc_zone_identifier       = [for k, v in local.subnet : aws_subnet.this[k].id if v.type == "public"]
+
   launch_template {
     id      = aws_launch_template.bastion[0].id
     version = "$Latest"
