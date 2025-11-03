@@ -47,7 +47,8 @@ data "aws_iam_policy_document" "nat_instance_inline_policy" {
     actions = ["ec2:AttachNetworkInterface"]
     resources = [
       "arn:aws:ec2:${local.region_name}:${local.account_id}:instance/*",
-      "arn:aws:ec2:eu-central-1:381492064914:network-interface/${aws_network_interface.nat_instance[0].id}"
+      "arn:aws:ec2:eu-central-1:381492064914:network-interface/${aws_network_interface.nat_instance[0].id}",
+      aws_network_interface.nat_instance[0].arn
     ]
   }
 }
