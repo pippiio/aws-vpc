@@ -76,7 +76,7 @@ resource "aws_network_interface" "nat_instance" {
   count = local.enable_nat_instance
 
   description       = "${local.name_prefix}nat-instance eni"
-  subnet_id         = aws_subnet.this["public-0"].id
+  subnet_id         = aws_subnet.this[var.nat.subnet].id
   security_groups   = [aws_security_group.nat_instance[0].id]
   source_dest_check = false
 
@@ -151,7 +151,7 @@ resource "aws_autoscaling_group" "nat_instance" {
   desired_capacity          = 1
   max_size                  = 1
   min_size                  = 1
-  vpc_zone_identifier       = [for k, v in local.subnet : aws_subnet.this[k].id if v.type == "public"]
+  vpc_zone_identifier       = [aws_subnet.this[var.nat.subnet].id]
 
   launch_template {
     id      = aws_launch_template.nat_instance[0].id

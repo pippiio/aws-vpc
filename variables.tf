@@ -24,6 +24,7 @@ variable "nat" {
   type = object({
     mode = optional(string, "single_nat_instance")
     type = optional(string, "t4g.nano")
+    subnet = optional(string, "public-0")
   })
   default = {}
 
