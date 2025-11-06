@@ -153,16 +153,16 @@ resource "aws_autoscaling_group" "nat_instance" {
   max_size                  = 1
   min_size                  = 1
   vpc_zone_identifier       = [aws_subnet.this[var.nat.subnet].id]
-
-  launch_template {
-    id      = aws_launch_template.nat_instance[0].id
-    version = "$Latest"
-  }
   health_check_type         = "EC2"
   health_check_grace_period = 300
   force_delete              = true
   wait_for_capacity_timeout = "0"
   max_instance_lifetime     = 60 * 60 * 24 * 35
+
+  launch_template {
+    id      = aws_launch_template.nat_instance[0].id
+    version = "$Latest"
+  }
 
   tag {
     key                 = "Name"
