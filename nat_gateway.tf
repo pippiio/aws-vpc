@@ -1,7 +1,7 @@
 resource "aws_eip" "nat_gw" {
   for_each = { for k, v in local.subnet : k => v if v.type == "public" && var.nat.mode == "ha_nat_gw" }
 
-  vpc = true
+  domain = "vpc"
 
   tags = merge(local.default_tags, {
     Name = "${local.name_prefix}natgw-ip-${each.value.no}"
