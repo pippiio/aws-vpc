@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "kms" {
   }
 
   statement {
-    sid       = "Allow CodeBuild CloudWatch Logs"
+    sid       = "Allow CloudWatch Logs"
     resources = ["*"]
     actions = [
       "kms:Encrypt",
@@ -25,12 +25,6 @@ data "aws_iam_policy_document" "kms" {
       type        = "Service"
       identifiers = ["logs.${local.region_name}.amazonaws.com"]
     }
-
-    # condition {
-    #   test     = "ArnEquals"
-    #   variable = "kms:EncryptionContext:aws:logs:arn"
-    #   values   = ["arn:aws:logs:${local.region_name}:${local.account_id}:log-group:/aws/codebuild/${local.name_prefix}*"]
-    # }
   }
 }
 
