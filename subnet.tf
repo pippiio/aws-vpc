@@ -7,8 +7,12 @@ resource "aws_subnet" "this" {
 
   map_public_ip_on_launch = each.value.type == "public"
 
-  tags = merge(local.default_tags, {
-    Name = "${local.name_prefix}${each.key}",
-    Type = each.value.type,
-  })
+  tags = merge(
+    local.default_tags,
+    each.value.tags,
+    {
+      Name = "${local.name_prefix}${each.key}",
+      Type = each.value.type,
+    }
+  )
 }

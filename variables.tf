@@ -5,7 +5,9 @@ variable "network" {
 
     availability_zone_count    = optional(number)
     public_subnet_bits         = optional(number, 28)
+    public_subnet_tags         = optional(map(string), {})
     private_subnet_bits        = optional(number, 27)
+    private_subnet_tags        = optional(map(string), {})
     flowlogs_retention_in_days = optional(number, -1)
   })
 
