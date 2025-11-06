@@ -5,7 +5,9 @@ variable "network" {
 
     availability_zone_count    = optional(number)
     public_subnet_bits         = optional(number, 28)
+    public_subnet_tags         = optional(map(string), {})
     private_subnet_bits        = optional(number, 27)
+    private_subnet_tags        = optional(map(string), {})
     flowlogs_retention_in_days = optional(number, -1)
   })
 
@@ -22,8 +24,8 @@ variable "network" {
 
 variable "nat" {
   type = object({
-    mode = optional(string, "single_nat_instance")
-    type = optional(string, "t4g.nano")
+    mode   = optional(string, "single_nat_instance")
+    type   = optional(string, "t4g.nano")
     subnet = optional(string, "public-0")
   })
   default = {}

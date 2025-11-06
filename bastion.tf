@@ -19,17 +19,19 @@ resource "aws_security_group" "bastion" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "bastion" {
-  role       = aws_iam_role.bastion[0].name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
 resource "aws_iam_role" "bastion" {
   count = local.enable_bastion
 
   name               = "${local.name_prefix}bastion-role"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "bastion" {
+  count = local.enable_bastion
+
+  role       = aws_iam_role.bastion[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "bastion" {
@@ -42,9 +44,9 @@ resource "aws_iam_instance_profile" "bastion" {
 resource "aws_launch_template" "bastion" {
   count = local.enable_bastion
 
-  name_prefix                 = "${local.name_prefix}bastion"
-  image_id                    = data.aws_ami.this.id
-  instance_type               = local.bastion_instance_type
+  name_prefix   = "${local.name_prefix}bastion"
+  image_id      = data.aws_ami.this.id
+  instance_type = local.bastion_instance_type
 
   iam_instance_profile {
     name = aws_iam_instance_profile.bastion[0].name
@@ -52,10 +54,11 @@ resource "aws_launch_template" "bastion" {
 
   network_interfaces {
     associate_public_ip_address = true
-    security_groups = setunion([
-      aws_security_group.bastion[0].id
-    ], var.bastion.security_groups)
-    device_index = 0
+    device_index                = 0
+    security_groups = setunion(
+      [aws_security_group.bastion[0].id],
+      var.bastion.security_groups,
+    )
   }
 
   monitoring {
@@ -89,16 +92,16 @@ resource "aws_autoscaling_group" "bastion" {
   max_size                  = 1
   min_size                  = 0
   vpc_zone_identifier       = [for k, v in local.subnet : aws_subnet.this[k].id if v.type == "public"]
-
-  launch_template {
-    id      = aws_launch_template.bastion[0].id
-    version = "$Latest"
-  }
   health_check_type         = "EC2"
   health_check_grace_period = 300
   force_delete              = true
   wait_for_capacity_timeout = "0"
   max_instance_lifetime     = 60 * 60 * 24 * 4
+
+  launch_template {
+    id      = aws_launch_template.bastion[0].id
+    version = "$Latest"
+  }
 
   tag {
     key                 = "Name"
