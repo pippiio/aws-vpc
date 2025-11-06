@@ -59,11 +59,14 @@ resource "aws_iam_role" "nat_instance" {
   name               = "${local.name_prefix}nat-instance-role"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+}
 
-  inline_policy {
-    name   = "nat_instance_inline_policy"
-    policy = data.aws_iam_policy_document.nat_instance_inline_policy[0].json
-  }
+resource "aws_iam_role_policy" "nat_instance" {
+  count = local.enable_nat_instance
+
+  name   = "nat_instance_inline_policy"
+  role   = aws_iam_role.nat_instance[0].id
+  policy = data.aws_iam_policy_document.nat_instance_inline_policy[0].json
 }
 
 resource "aws_iam_instance_profile" "nat_instance" {
