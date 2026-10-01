@@ -20,8 +20,15 @@ resource "aws_security_group" "bastion" {
 }
 
 resource "aws_iam_role_policy_attachment" "bastion" {
+  count = local.enable_bastion
+
   role       = aws_iam_role.bastion[0].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.bastion
+  to   = aws_iam_role_policy_attachment.bastion[0]
 }
 
 resource "aws_iam_role" "bastion" {
